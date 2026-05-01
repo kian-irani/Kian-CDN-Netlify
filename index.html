@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Netlify XHTTP Relay — کیان ایرانی</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080d1a;--surface:#0f1729;--s2:#161f36;--s3:#1d2845;
+  --line:#1e2d52;--line2:#2a3d6e;
+  --text:#e8edf8;--t2:#8fa3cc;--t3:#4d6094;
+  --accent:#00e5b0;--a2:#00c49a;--asoft:rgba(0,229,176,.10);
+  --warn:#f59e0b;--wsoft:rgba(245,158,11,.08);
+  --info:#60a5fa;--isoft:rgba(96,165,250,.07);
+  --danger:#f87171;--dsoft:rgba(248,113,113,.08);
+  --code:#040914;--r:14px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:62px}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--text);line-height:1.85;min-height:100vh;padding:0 0 120px;
+  background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(0,229,176,.08),transparent),
+  radial-gradient(ellipse 40% 40% at 90% 50%,rgba(96,165,250,.04),transparent);}
+
+/* progress */
+.pbar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--surface);z-index:200}
+.pfill{height:100%;width:0%;background:linear-gradient(90deg,var(--a2),var(--accent),#7fffd4);transition:width .6s;box-shadow:0 0 16px rgba(0,229,176,.5)}
+
+/* topbar */
+.topbar{position:fixed;top:3px;left:0;right:0;background:rgba(8,13,26,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);padding:10px 16px;z-index:100;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:13px;font-weight:700;color:var(--accent)}
+.brand span{color:var(--t2);font-weight:400}
+.steps-txt{font-size:12px;color:var(--t3)}
+.steps-txt strong{color:var(--accent);font-weight:600}
+
+.wrap{max-width:680px;margin:0 auto;padding:72px 14px 20px}
+
+/* header */
+header{text-align:center;padding:24px 8px 28px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:var(--asoft);color:var(--accent);border:1px solid rgba(0,229,176,.22);border-radius:100px;font-size:11.5px;font-weight:600;margin-bottom:16px}
+h1{font-size:clamp(22px,6vw,32px);font-weight:800;line-height:1.35;margin-bottom:10px;background:linear-gradient(135deg,#fff 20%,#9ab4dc 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lead{color:var(--t2);font-size:13.5px;max-width:460px;margin:0 auto 18px}
+.arch{display:inline-block;background:var(--code);border:1px solid var(--line);border-radius:var(--r);padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);text-align:right;margin-bottom:8px;line-height:2.1}
+.arch .hl{color:var(--accent)}.arch .dim{color:var(--t3);font-size:11px}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 16px;margin-bottom:14px;transition:border-color .4s,box-shadow .4s;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--line);transition:background .4s}
+.card.done::before{background:var(--accent)}
+.card.done{border-color:rgba(0,229,176,.25);box-shadow:0 0 28px rgba(0,229,176,.06)}
+.card.done .cnum{background:var(--accent);color:var(--bg);border-color:var(--accent);box-shadow:0 0 14px rgba(0,229,176,.4)}
+.card.done .cnum::before{content:'✓';font-size:14px}
+.card.done .cnum span{display:none}
+.chead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.cnum{width:34px;height:34px;border-radius:10px;background:var(--s2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;font-family:'JetBrains Mono',monospace;transition:all .3s;color:var(--accent)}
+.ctitle{font-size:16px;font-weight:700;flex:1}
+.csub{font-size:12px;color:var(--t3);font-weight:400;display:block;margin-top:1px}
+.cdesc{color:var(--t2);font-size:13.5px;margin-bottom:14px}
+
+/* fields */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--t2);margin-bottom:5px;font-weight:600}
+.field input{width:100%;background:var(--code);border:1px solid var(--line);border-radius:var(--rs);padding:11px 13px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;direction:ltr;text-align:left;transition:border-color .2s,box-shadow .2s}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,176,.1)}
+.field input::placeholder{color:var(--t3);font-size:12px}
+.field .hint{font-size:12px;color:var(--t3);margin-top:5px;line-height:1.6}
+.field input.ok{border-color:var(--accent)}
+.field input.err{border-color:var(--danger)}
+
+/* fields row */
+.fields-row{display:flex;gap:10px}
+.fields-row .field{flex:1}
+
+/* output */
+.out{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;direction:ltr}
+.out-lbl{direction:rtl;font-size:11.5px;color:var(--t3);margin-bottom:8px;font-weight:600;display:flex;align-items:center;gap:6px}
+.out-lbl::before{content:'▸';color:var(--accent);font-size:10px}
+.out code{display:block;font-family:'JetBrains Mono',monospace;font-size:12px;color:#7dd3fc;word-break:break-all;white-space:pre-wrap;line-height:1.7;padding-bottom:10px;max-height:320px;overflow-y:auto}
+.out code::-webkit-scrollbar{width:5px}
+.out code::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+
+/* buttons */
+.copy-btn{width:100%;background:var(--s2);border:1px solid var(--line2);color:var(--t2);padding:10px;border-radius:var(--rs);cursor:pointer;font-family:'Vazirmatn',sans-serif;font-size:13px;font-weight:600;transition:all .2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
+.copy-btn:hover,.copy-btn.copied{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--bg);padding:12px 16px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;margin:10px 0 4px;transition:transform .2s,box-shadow .2s;border:none;width:100%;cursor:pointer;font-family:'Vazirmatn',sans-serif}
+.action-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,176,.3)}
+.action-btn.sec{background:var(--s2);color:var(--text);border:1px solid var(--line2);box-shadow:none}
+.action-btn.sec:hover{background:var(--s3);transform:none;box-shadow:none}
+.done-btn{width:100%;margin-top:16px;padding:11px;background:transparent;border:1px dashed var(--line2);color:var(--t3);border-radius:10px;cursor:pointer;font-family:'Vazirmatn',sans-serif;font-size:13px;font-weight:600;transition:all .2s}
+.done-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--asoft)}
+.card.done .done-btn{border-style:solid;border-color:rgba(0,229,176,.3);color:var(--accent);background:var(--asoft)}
+
+/* notes */
+.note{background:var(--wsoft);border-right:3px solid var(--warn);padding:11px 13px;border-radius:var(--rs);font-size:13px;color:var(--t2);margin:10px 0;line-height:1.8}
+.note.info{background:var(--isoft);border-right-color:var(--info)}
+.note.danger{background:var(--dsoft);border-right-color:var(--danger)}
+.note.ok{background:var(--asoft);border-right-color:var(--accent)}
+.note strong{color:var(--text)}
+.note code{font-family:'JetBrains Mono',monospace;color:var(--accent);background:var(--code);padding:1px 6px;border-radius:4px;font-size:11.5px}
+
+.sinfo{background:var(--s2);border:1px solid var(--line);border-radius:var(--rs);padding:12px 14px;margin:10px 0;font-size:13px;color:var(--t2);line-height:1.9}
+.sinfo strong{color:var(--accent)}
+.sinfo code{font-family:'JetBrains Mono',monospace;color:var(--accent);background:var(--code);padding:1px 6px;border-radius:4px;font-size:11.5px}
+
+.div{height:1px;background:var(--line);margin:14px 0;border:none}
+.slbl{font-size:11px;color:var(--t3);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+
+/* big script box */
+.script-box{background:var(--code);border:2px solid rgba(0,229,176,.3);border-radius:var(--r);padding:0;margin:12px 0;overflow:hidden}
+.script-header{background:rgba(0,229,176,.08);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,229,176,.15)}
+.script-title{font-size:12px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px}
+.script-body{padding:14px;direction:ltr}
+.script-body code{display:block;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#a5f3d4;white-space:pre-wrap;word-break:break-all;line-height:1.7;max-height:350px;overflow-y:auto}
+.script-body code::-webkit-scrollbar{width:5px}
+.script-body code::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.script-copy{width:100%;background:var(--accent);color:var(--bg);border:none;padding:11px;border-radius:0 0 var(--r) var(--r);cursor:pointer;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:700;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.script-copy:hover{background:var(--a2)}
+.script-copy.copied{background:#059669}
+
+/* lock */
+.lock-msg{text-align:center;color:var(--t3);font-size:13px;padding:20px 10px;background:var(--code);border-radius:var(--rs);border:1px dashed var(--line)}
+.lock-msg::before{content:'🔒  '}
+
+/* env box */
+.env-box{background:var(--code);border:2px dashed rgba(0,229,176,.3);border-radius:10px;padding:14px;margin:12px 0}
+.env-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.env-row:last-child{margin-bottom:0}
+.env-key{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--warn);font-weight:600;min-width:130px}
+.env-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);word-break:break-all;flex:1}
+
+/* result area */
+.result-area{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}
+.result-area textarea{width:100%;background:transparent;border:none;color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:12px;resize:vertical;min-height:100px;outline:none;line-height:1.6}
+.result-area textarea::placeholder{color:var(--t3)}
+
+/* float progress */
+.float-p{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(9,13,24,.92);backdrop-filter:blur(12px);border:1px solid var(--line2);border-radius:100px;padding:8px 18px;font-size:12.5px;color:var(--t2);z-index:150;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap}
+.float-p strong{color:var(--accent);font-weight:700}
+
+/* finale */
+.finale{text-align:center;padding:32px 20px;background:linear-gradient(135deg,rgba(0,229,176,.08),rgba(96,165,250,.05));border:1px solid rgba(0,229,176,.3);border-radius:var(--r);margin-top:20px;opacity:.4;pointer-events:none;transition:opacity .5s}
+.finale.unlocked{opacity:1;pointer-events:auto}
+.finale-emoji{font-size:40px;margin-bottom:10px;display:block}
+.finale h2{font-size:22px;color:var(--accent);margin-bottom:8px;font-weight:800}
+.finale p{color:var(--t2);font-size:13.5px;max-width:400px;margin:0 auto}
+.sbadges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.sb{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.sb.ok{background:var(--asoft);color:var(--accent);border:1px solid rgba(0,229,176,.2)}
+.sb.w{background:var(--wsoft);color:var(--warn);border:1px solid rgba(245,158,11,.2)}
+.sb.no{background:var(--dsoft);color:var(--danger);border:1px solid rgba(248,113,113,.2)}
+
+@media(max-width:480px){.fields-row{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="pbar"><div class="pfill" id="pf"></div></div>
+<div class="topbar">
+  <div class="brand">Netlify Relay <span>— Kian Irani</span></div>
+  <div class="steps-txt">مرحله <strong id="pt">۰</strong> از <strong>۶</strong></div>
+</div>
+
+<div class="wrap">
+
+<header>
+  <div class="badge">⚡ راهنمای گام به گام — فقط کپی‌پیست</div>
+  <h1>اینترنت آزاد<br>با Netlify + VPS</h1>
+  <p class="lead">مشخصات VPS رو وارد کن — اسکریپت شخصی‌سازی‌شده‌ات ساخته می‌شه. فقط یه بار paste کن.</p>
+  <div class="arch">
+    <span class="dim">📱 گوشی ایران</span><br>
+    <span class="dim">↓ </span><span class="hl">VLESS + XHTTP over TLS</span><br>
+    <span class="dim">↓ </span><span class="hl">Netlify CDN</span> <span class="dim">(Edge Function — رایگان)</span><br>
+    <span class="dim">↓ </span><span class="hl">VPS شما</span> <span class="dim">(3x-ui + Xray)</span><br>
+    <span class="dim">↓ </span><span class="hl">🌍 اینترنت آزاد</span>
+  </div>
+</header>
+
+<!-- ═══ STEP 0: مشخصات VPS ═══ -->
+<div class="card" data-step="0">
+  <div class="chead">
+    <div class="cnum"><span>۰</span></div>
+    <div class="ctitle">مشخصات VPS <span class="csub">یه بار وارد کن — همه جا خودکار پر می‌شه</span></div>
+  </div>
+  <p class="cdesc">این اطلاعات رو از فروشنده VPS داری. هیچ‌جا ذخیره نمی‌شن — فقط داخل مرورگرته.</p>
+
+  <div class="fields-row">
+    <div class="field">
+      <label>📡 IP سرور</label>
+      <input type="text" id="i-ip" placeholder="92.119.56.9" oninput="rebuild()"/>
+      <div class="hint">آدرس IPv4</div>
+    </div>
+    <div class="field">
+      <label>🔌 پورت SSH</label>
+      <input type="text" id="i-ssh" placeholder="22" value="22" oninput="rebuild()"/>
+      <div class="hint">معمولاً ۲۲</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>🔐 رمز root</label>
+    <input type="password" id="i-pass" placeholder="رمز VPS از فروشنده" oninput="rebuild()"/>
+    <div class="hint">فقط برای ساخت اسکریپت استفاده می‌شه — هیچ‌جا ارسال نمی‌شه</div>
+  </div>
+
+  <div id="vps-preview" style="display:none">
+    <div class="note ok" id="vps-ok-msg"></div>
+  </div>
+
+  <button class="done-btn" onclick="markDone(0)">✓ وارد کردم</button>
+</div>
+
+<!-- ═══ STEP 1: اتصال SSH ═══ -->
+<div class="card" data-step="1">
+  <div class="chead">
+    <div class="cnum"><span>۱</span></div>
+    <div class="ctitle">اتصال به VPS <span class="csub">با Termius — رایگان و ساده</span></div>
+  </div>
+
+  <a class="action-btn" href="https://play.google.com/store/apps/details?id=com.server.auditor.ssh.client" target="_blank"><span>📲</span> دانلود Termius از Play Store</a>
+
+  <div class="sinfo">
+    <strong>راهنمای اتصال:</strong><br>
+    ۱. Termius → دکمه <strong>+</strong> → <strong>New Host</strong><br>
+    ۲. Hostname: <code id="show-ip">IP سرورت</code><br>
+    ۳. Port: <code id="show-ssh">22</code> | Username: <code>root</code><br>
+    ۴. Password: رمز VPS → <strong>Save</strong> → روی هاست tap کن
+  </div>
+  <div class="note info">پیام <strong>continue connecting?</strong> اومد؟ → <strong>Yes</strong> بزن — نرماله.</div>
+  <button class="done-btn" onclick="markDone(1)">✓ وصل شدم به ترمینال</button>
+</div>
+
+<!-- ═══ STEP 2: اسکریپت نصب ═══ -->
+<div class="card" data-step="2">
+  <div class="chead">
+    <div class="cnum"><span>۲</span></div>
+    <div class="ctitle">اسکریپت نصب کامل <span class="csub">یه بار paste کن — همه کار انجام می‌ده</span></div>
+  </div>
+
+  <div id="script-locked" class="lock-msg">ابتدا مشخصات VPS را در مرحله ۰ وارد کن</div>
+
+  <div id="script-ready" style="display:none">
+    <p class="cdesc">این اسکریپت به صورت خودکار:</p>
+    <div class="note ok" style="margin-bottom:12px">
+      ✅ فایروال رو غیرفعال می‌کنه (پورت‌های موجود دست نمی‌خوره)<br>
+      ✅ 3x-ui رو نصب و تنظیم می‌کنه<br>
+      ✅ یه inbound VLESS+XHTTP می‌سازه<br>
+      ✅ UUID و PATH رو نمایش می‌ده
+    </div>
+
+    <div class="script-box">
+      <div class="script-header">
+        <div class="script-title">🚀 اسکریپت شخصی‌سازی‌شده برای VPS شما</div>
+        <div style="font-size:11px;color:var(--t3)" id="script-ip-label"></div>
+      </div>
+      <div class="script-body">
+        <code id="main-script">در حال ساخت...</code>
+      </div>
+      <button class="script-copy" id="main-copy-btn" onclick="copyMainScript()">
+        📋 کپی کامل اسکریپت
+      </button>
+    </div>
+
+    <div class="note">
+      <strong>بعد از paste و اجرا:</strong><br>
+      • نصب ~۲ دقیقه طول می‌کشه<br>
+      • در آخر <code>UUID=...</code> و <code>PATH=...</code> چاپ می‌شه<br>
+      • اون مقادیر رو در مرحله بعد وارد کن
+    </div>
+  </div>
+
+  <button class="done-btn" onclick="markDone(2)">✓ اسکریپت اجرا شد</button>
+</div>
+
+<!-- ═══ STEP 3: UUID و PATH ═══ -->
+<div class="card" data-step="3">
+  <div class="chead">
+    <div class="cnum"><span>۳</span></div>
+    <div class="ctitle">وارد کردن UUID و PATH <span class="csub">از خروجی اسکریپت</span></div>
+  </div>
+  <p class="cdesc">بعد از اجرای اسکریپت، UUID و PATH در ترمینال نشون داده می‌شن. اینجا وارد کن:</p>
+
+  <div class="note ok">
+    <strong>خروجی اسکریپت اینطوریه:</strong><br>
+    <code>UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code><br>
+    <code>PATH=relay-xxxxxxxx</code>
+  </div>
+
+  <div class="field">
+    <label>🔑 UUID</label>
+    <input type="text" id="i-uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="rebuild()"/>
+    <div class="hint">۳۶ کاراکتر — کل خط بعد از UUID= رو کپی کن</div>
+  </div>
+  <div class="field">
+    <label>🛤️ PATH</label>
+    <input type="text" id="i-path" placeholder="relay-xxxxxxxx" oninput="rebuild()"/>
+    <div class="hint">بدون / — فقط همون چیزی که بعد از PATH= نوشته</div>
+  </div>
+
+  <button class="done-btn" onclick="markDone(3)">✓ وارد کردم</button>
+</div>
+
+<!-- ═══ STEP 4: Netlify ═══ -->
+<div class="card" data-step="4">
+  <div class="chead">
+    <div class="cnum"><span>۴</span></div>
+    <div class="ctitle">راه‌اندازی Netlify <span class="csub">رایگان — بدون کارت بانکی</span></div>
+  </div>
+
+  <div id="step4-locked" class="lock-msg">ابتدا IP سرور را در مرحله ۰ وارد کن</div>
+  <div id="step4-content" style="display:none">
+
+    <a class="action-btn" href="https://github.com/amirshaker000/netlify-relay/fork" target="_blank"><span>🍴</span> Fork ریپو در GitHub</a>
+
+    <div class="note danger">
+      <strong>بعد از Fork حتماً اسم ریپو رو عوض کن!</strong><br>
+      Settings → Repository name → یه اسم دیگه (مثلاً <code>my-netlify-relay</code>)
+    </div>
+
+    <a class="action-btn sec" href="https://app.netlify.com/start" target="_blank"><span>🌐</span> Import از GitHub در Netlify</a>
+
+    <div class="sinfo">
+      <strong>مراحل در Netlify:</strong><br>
+      ۱. Add new site → Import an existing project → GitHub<br>
+      ۲. ریپوی fork شده رو انتخاب کن<br>
+      ۳. Build command: <code>npm run build</code><br>
+      ۴. Publish directory: <code>public</code><br>
+      ۵. روی <strong>Add environment variables</strong> کلیک کن:
+    </div>
+
+    <div class="env-box">
+      <div class="env-row">
+        <div class="env-key">KEY:</div>
+        <div class="env-val">TARGET_DOMAIN</div>
+        <button class="copy-btn" style="width:auto;padding:5px 12px;margin:0;flex-shrink:0" data-text="TARGET_DOMAIN">📋 کپی</button>
+      </div>
+      <div class="env-row">
+        <div class="env-key">VALUE:</div>
+        <div class="env-val" id="env-val">http://IP:8080</div>
+        <button class="copy-btn" style="width:auto;padding:5px 12px;margin:0;flex-shrink:0" data-target="env-val">📋 کپی</button>
+      </div>
+    </div>
+
+    <div class="sinfo">
+      ۶. <strong>Deploy site</strong> → صبر کن تا <strong style="color:var(--accent)">Published ✓</strong><br>
+      ۷. آدرس <code>xxxx.netlify.app</code> رو کپی کن
+    </div>
+
+    <div class="field" style="margin-top:14px">
+      <label>🌐 آدرس Netlify سایتت (بدون https://)</label>
+      <input type="text" id="i-netlify" placeholder="xxxx.netlify.app" oninput="rebuild()"/>
+    </div>
+
+    <button class="done-btn" onclick="markDone(4)">✓ Deploy موفق بود</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 5: کانفیگ نهایی ═══ -->
+<div class="card" data-step="5">
+  <div class="chead">
+    <div class="cnum"><span>۵</span></div>
+    <div class="ctitle">کانفیگ نهایی VLESS <span class="csub">آماده ایمپورت در v2rayNG</span></div>
+  </div>
+
+  <div id="step5-locked" class="lock-msg">ابتدا مراحل ۰، ۳ و ۴ را کامل کن</div>
+  <div id="step5-content" style="display:none">
+
+    <div class="script-box">
+      <div class="script-header">
+        <div class="script-title">📱 کانفیگ VLESS نهایی</div>
+      </div>
+      <div class="script-body">
+        <code id="cmd-config" style="color:#a5f3d4;font-size:11px">…</code>
+      </div>
+      <button class="script-copy" onclick="copyConfig()">📋 کپی کانفیگ</button>
+    </div>
+
+    <a class="action-btn sec" href="https://play.google.com/store/apps/details?id=com.v2ray.ang" target="_blank"><span>📱</span> دانلود v2rayNG (اگه نداری)</a>
+
+    <div class="sinfo">
+      <strong>ایمپورت در v2rayNG:</strong><br>
+      ۱. دکمه <strong>+</strong> (بالا راست) → <strong>Import config from Clipboard</strong><br>
+      ۲. روی کانفیگ tap کن تا انتخاب بشه<br>
+      ۳. دکمه ▶ پایین رو بزن<br>
+      ۴. یه سایت فیلترشده مثل google.com باز کن
+    </div>
+
+    <div class="note info">
+      <strong>اگه -1ms نشون داد:</strong><br>
+      • v2rayNG رو آپدیت کن (باید آخرین نسخه باشه)<br>
+      • یا <a href="https://github.com/hiddify/hiddify-app/releases/latest" target="_blank" style="color:var(--info)">Hiddify</a> رو امتحان کن
+    </div>
+
+    <button class="done-btn" onclick="markDone(5)">✓ اتصال برقرار شد 🎉</button>
+  </div>
+</div>
+
+<!-- ═══ FINALE ═══ -->
+<div class="finale" id="finale">
+  <span class="finale-emoji">🎉</span>
+  <h2>اینترنت آزاد!</h2>
+  <p>VPS تو از پشت CDN جهانی Netlify کار می‌کنه — IP سرورت پنهانه و ترافیکت رمزگذاری‌شده‌ست.</p>
+  <div class="sbadges">
+    <span class="sb ok">✅ تلگرام</span>
+    <span class="sb ok">✅ مرورگر</span>
+    <span class="sb ok">✅ YouTube</span>
+    <span class="sb ok">✅ اینستاگرام</span>
+    <span class="sb w">⚠️ ChatGPT Streaming</span>
+    <span class="sb no">❌ Discord Voice</span>
+  </div>
+  <br>
+  <p style="font-size:12px;color:var(--t3)">ساخته‌شده توسط <a href="https://github.com/KIAN-IRANI" target="_blank" style="color:var(--accent)">Kian Irani</a> | <a href="https://t.me/Kian_irani_t" target="_blank" style="color:var(--accent)">@Kian_irani_t</a></p>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="float-p">پیشرفت: <strong id="pf2">۰</strong> از <strong>۶</strong> ✓</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fa=n=>n.toString().replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+const done=new Set();
+const TOTAL=6;
+
+function markDone(n){
+  done.add(n);
+  document.querySelector(`.card[data-step="${n}"]`).classList.add('done');
+  updateP();
+  if(done.size===TOTAL){
+    $('finale').classList.add('unlocked');
+    setTimeout(()=>$('finale').scrollIntoView({behavior:'smooth',block:'center'}),300);
+    return;
+  }
+  const next=document.querySelector(`.card[data-step="${n+1}"]`);
+  if(next) setTimeout(()=>next.scrollIntoView({behavior:'smooth',block:'start'}),250);
+}
+
+function updateP(){
+  const pct=(done.size/TOTAL)*100;
+  $('pf').style.width=pct+'%';
+  $('pt').textContent=fa(done.size);
+  $('pf2').textContent=fa(done.size);
+}
+
+function rebuild(){
+  const ip=$('i-ip').value.trim();
+  const ssh=$('i-ssh').value.trim()||'22';
+  const pass=$('i-pass').value.trim();
+  const uuid=$('i-uuid').value.trim();
+  const path=$('i-path').value.trim();
+  const netlify=($('i-netlify')||{value:''}).value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'');
+
+  // step 0 preview
+  if(ip&&pass){
+    $('vps-preview').style.display='block';
+    $('vps-ok-msg').innerHTML=`<strong>✅ آماده‌ست!</strong> اسکریپت برای <code>${ip}</code> ساخته می‌شه.`;
+  } else {
+    $('vps-preview').style.display='none';
+  }
+
+  // step 1 update
+  $('show-ip').textContent=ip||'IP سرورت';
+  $('show-ssh').textContent=ssh;
+
+  // step 2 script
+  const scriptReady=ip&&pass;
+  $('script-locked').style.display=scriptReady?'none':'block';
+  $('script-ready').style.display=scriptReady?'block':'none';
+  $('script-ip-label').textContent=ip?`IP: ${ip}`:'';
+  if(scriptReady){
+    $('main-script').textContent=buildMainScript(ip,ssh,pass);
+  }
+
+  // step 4
+  const s4ok=!!ip;
+  $('step4-locked').style.display=s4ok?'none':'block';
+  $('step4-content').style.display=s4ok?'block':'none';
+  if(ip) $('env-val').textContent=`http://${ip}:8080`;
+
+  // step 5
+  const s5ok=ip&&uuid&&path&&netlify;
+  $('step5-locked').style.display=s5ok?'none':'block';
+  $('step5-content').style.display=s5ok?'block':'none';
+  if(s5ok) $('cmd-config').textContent=buildConfig(uuid,path,netlify);
+}
+
+function buildMainScript(ip, ssh, pass){
+  return `python3 << 'PYEOF'
+import subprocess, os, time, json, random, string
+
+def run(cmd, capture=False):
+    return subprocess.run(cmd, shell=True, capture_output=capture, text=True)
+
+def log(m): print(f"\\n\\033[36m━━ {m} ━━\\033[0m")
+def ok(m):  print(f"\\033[32m  ✓ {m}\\033[0m")
+def err(m): print(f"\\033[31m  ✗ {m}\\033[0m")
+
+# ── غیرفعال کردن فایروال ──
+log("غیرفعال کردن فایروال")
+run("ufw disable 2>/dev/null || true")
+run("systemctl stop firewalld 2>/dev/null || true")
+run("iptables -P INPUT ACCEPT 2>/dev/null || true")
+run("iptables -P FORWARD ACCEPT 2>/dev/null || true")
+run("iptables -P OUTPUT ACCEPT 2>/dev/null || true")
+ok("فایروال غیرفعال شد — همه پورت‌ها باز هستن")
+
+# ── آپدیت ──
+log("آپدیت سیستم")
+run("export DEBIAN_FRONTEND=noninteractive && apt-get update -qq && apt-get install -y -qq curl wget sqlite3 ca-certificates python3")
+ok("ابزارها نصب شدن")
+
+# ── نصب x-ui ──
+log("دانلود و نصب 3x-ui v2.9.3")
+run("rm -rf /tmp/xui && mkdir /tmp/xui")
+run("wget -qO /tmp/xui.tar.gz https://github.com/MHSanaei/3x-ui/releases/download/v2.9.3/x-ui-linux-amd64.tar.gz")
+run("tar -xzf /tmp/xui.tar.gz -C /tmp/xui/")
+
+real=run("find /tmp/xui -name 'x-ui' -type f 2>/dev/null",capture=True).stdout.strip().split("\\n")[0]
+if not real:
+    err("فایل x-ui پیدا نشد!")
+    exit(1)
+real_dir=os.path.dirname(real)
+
+run("systemctl stop x-ui 2>/dev/null || true")
+run("rm -rf /usr/local/x-ui && mkdir -p /usr/local/x-ui")
+run(f"cp -r {real_dir}/* /usr/local/x-ui/")
+run("chmod +x /usr/local/x-ui/x-ui")
+run("find /usr/local/x-ui/bin -type f -exec chmod +x {} \\\\; 2>/dev/null || true")
+run("ln -sf /usr/local/x-ui/x-ui /usr/bin/x-ui")
+
+svc="""[Unit]
+Description=x-ui Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/x-ui/
+ExecStart=/usr/local/x-ui/x-ui
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+"""
+with open("/etc/systemd/system/x-ui.service","w") as f: f.write(svc)
+run("systemctl daemon-reload && systemctl enable x-ui && systemctl start x-ui")
+time.sleep(5)
+
+if run("systemctl is-active x-ui",capture=True).stdout.strip()=="active":
+    ok("3x-ui اجرا شد ✅")
+else:
+    err("x-ui اجرا نشد!")
+    print(run("journalctl -u x-ui -n 10 --no-pager",capture=True).stdout)
+    exit(1)
+
+# ── DB ──
+DB="/etc/x-ui/x-ui.db"
+for _ in range(15):
+    if os.path.exists(DB) and os.path.getsize(DB)>1000: break
+    time.sleep(2)
+
+run("/usr/local/x-ui/x-ui setting -port 27925 -username kianadmin -password 'NetKian@2025!'")
+run("systemctl restart x-ui && sleep 3")
+ok("پنل: port=27925 | user=kianadmin | pass=NetKian@2025!")
+
+# ── inbound ──
+log("ساخت inbound VLESS+XHTTP پورت 8080")
+NEW_UUID=run("cat /proc/sys/kernel/random/uuid",capture=True).stdout.strip()
+NEW_PATH="relay-"+"".join(random.choices(string.ascii_lowercase+string.digits,k=8))
+PORT=8080
+
+settings=json.dumps({"clients":[{"id":NEW_UUID,"flow":"","email":"user","limitIp":0,"totalGB":0,"expiryTime":0,"enable":True,"tgId":"","subId":"","reset":0}],"decryption":"none","fallbacks":[]})
+stream=json.dumps({"network":"xhttp","security":"none","externalProxy":[],"xhttpSettings":{"path":f"/{NEW_PATH}","host":"","headers":{},"scMaxBufferedPosts":30,"scMaxEachPostBytes":"1000000","noSSEHeader":False,"xPaddingBytes":"100-1000","mode":"auto"}})
+sniffing=json.dumps({"enabled":True,"destOverride":["http","tls","quic","fakedns"],"metadataOnly":False,"routeOnly":False})
+
+def sq(s): return s.replace("'","''")
+sql=(f"INSERT INTO inbounds (user_id,up,down,total,all_time,remark,enable,expiry_time,traffic_reset,last_traffic_reset_time,listen,port,protocol,settings,stream_settings,tag,sniffing) VALUES (1,0,0,0,0,'Netlify-Relay',1,0,'never',0,'',{PORT},'vless','{sq(settings)}','{sq(stream)}','inbound-{PORT}','{sq(sniffing)}');")
+with open("/tmp/ib.sql","w") as f: f.write(sql)
+run("systemctl stop x-ui && sleep 1")
+r=run(f"sqlite3 '{DB}' < /tmp/ib.sql",capture=True)
+if r.returncode!=0: err("SQL: "+r.stderr[:100])
+run("systemctl start x-ui && sleep 2")
+
+# تأیید
+c=run(f"sqlite3 '{DB}' 'SELECT COUNT(*) FROM inbounds WHERE port={PORT};'",capture=True).stdout.strip()
+if c=="1": ok("inbound ثبت شد ✅")
+else: err("inbound ثبت نشد!")
+
+# ── نتیجه ──
+print()
+print("╔══════════════════════════════════════════════╗")
+print("║           ✅ نصب کامل شد!                    ║")
+print("╠══════════════════════════════════════════════╣")
+print(f"║  UUID={NEW_UUID}")
+print(f"║  PATH={NEW_PATH}")
+print(f"║  PORT=8080")
+print("╠══════════════════════════════════════════════╣")
+print("║  پنل: http://${ip}:27925")
+print("║  user: kianadmin | pass: NetKian@2025!")
+print("╚══════════════════════════════════════════════╝")
+print()
+print(f"UUID={NEW_UUID}")
+print(f"PATH={NEW_PATH}")
+PYEOF`;
+}
+
+function buildConfig(uuid, path, netlify){
+  return `vless://${uuid}@kubernetes.io:443?mode=auto&path=%2F${encodeURIComponent(path)}&security=tls&alpn=h2%2Chttp%2F1.1&encryption=none&insecure=0&host=${netlify}&fp=chrome&type=xhttp&allowInsecure=0&sni=kubernetes.io#Netlify-Relay`;
+}
+
+function copyMainScript(){
+  const text=$('main-script').textContent;
+  copyText(text,$('main-copy-btn'),'📋 کپی کامل اسکریپت','✅ کپی شد! در ترمینال Paste کن');
+}
+
+function copyConfig(){
+  const text=$('cmd-config').textContent;
+  const btn=document.querySelector('.script-copy');
+  copyText(text,btn,'📋 کپی کانفیگ','✅ کپی شد! در v2rayNG Import کن');
+}
+
+async function copyText(text,btn,orig,success){
+  try{await navigator.clipboard.writeText(text);}
+  catch{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+  btn.textContent=success;btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+}
+
+// copy buttons (inline)
+document.addEventListener('click',async e=>{
+  const btn=e.target.closest('.copy-btn');
+  if(!btn) return;
+  const text=btn.dataset.text||(btn.dataset.target?$(btn.dataset.target).textContent:'');
+  if(!text) return;
+  try{await navigator.clipboard.writeText(text);}
+  catch{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+  const o=btn.textContent;btn.textContent='✓ کپی شد!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent=o;btn.classList.remove('copied');},1500);
+});
+
+rebuild(); updateP();
+</script>
+</body>
+</html>
