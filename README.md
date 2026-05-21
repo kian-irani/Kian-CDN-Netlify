@@ -9,6 +9,7 @@
 [![Live Site](https://img.shields.io/badge/Live%20Site-Open%20in%20Browser-3fb950?style=for-the-badge&logo=github)](https://KIAN-IRANI.github.io/Kian-CDN-Netlify)
 [![Telegram](https://img.shields.io/badge/Telegram-Channel-26A5E4?style=for-the-badge&logo=telegram)](https://t.me/kian_irani_cdn_f)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Donate TRC20](https://img.shields.io/badge/Donate-TRON%20TRC20-EF0027?style=for-the-badge&logo=tron)](DONATE.md)
 [![Stars](https://img.shields.io/github/stars/KIAN-IRANI/Kian-CDN-Netlify?style=for-the-badge&color=yellow)](https://github.com/KIAN-IRANI/Kian-CDN-Netlify/stargazers)
 
 </div>
@@ -74,6 +75,18 @@ Fill in your VPS IP, port, and credentials → get ready-to-use configs.
 
 - 💬 Telegram: [@Kian_irani_t](https://t.me/Kian_irani_t)
 - 📢 Channel: [@kian_irani_cdn_f](https://t.me/kian_irani_cdn_f)
+
+---
+
+
+## 💝 Support this project
+
+**Tron TRC20** (USDT/USDC/TRX):
+```
+TEVuoZ7574341zbc8pc5jrrBrgqGGMys5q
+```
+
+See [DONATE.md](DONATE.md) for full details (Iranian card, transparency, perks).
 
 ---
 
